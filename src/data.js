@@ -18,8 +18,18 @@
  *                C    : extreme outer, y~745
  *                DOTA : x=1240, y=660 (the home star anchor)
  *    size    : star size in px (6-28). Bigger = brighter glow.
- *    note    : (optional) prose shown in the detail panel "log" entry
- *    apple   : (optional) marks the @apple companion (It Takes Two)
+ *    note      : (optional) prose shown in the detail panel "log" entry
+ *    apple     : (optional) marks the @apple companion (It Takes Two)
+ *    premise   : (optional) what the game IS — 1-2 sentences for someone who's never heard of it
+ *    year      : (optional) release year (number, e.g. 2022)
+ *    studio    : (optional) developer name (string)
+ *    genre     : (optional) main genre (string, keep jargon-free)
+ *    hours     : (optional) approximate hours played (number)
+ *    played    : (optional) when you played it (string, e.g. "2023" or "2020 lockdown")
+ *    metacritic: (optional) Metacritic critic score, 0-100 (number) — only fill if confident
+ *    review    : (optional) subjective prose, written for the audience (string)
+ *    vibes     : (optional) mood tags (string array, e.g. ['melancholy', 'cathartic'])
+ *    similarTo : (optional) games she might recognise that share DNA (string array, use sparingly)
  *
  *  TIERS object — defines the cosmic classifications, colors, and prose.
  *  Adjust .color, .glow, .glowSoft, .accent to recolor a whole tier.
@@ -110,9 +120,13 @@ const TIERS = {
 const GAMES = [
   // ============ S TIER — singularities ============
   // Brightest objects, scattered along the bright spine of the nebula (upper-right region)
-  { name: 'Elden Ring',            tier: 'S', score: 'inf', binary: true,  x: 920,  y: 240, size: 22 },
+  { name: 'Elden Ring',            tier: 'S', score: 'inf', binary: true,  x: 920,  y: 240, size: 22,
+    premise: 'open world fantasy RPG. you explore a vast, cursed kingdom on horseback, piecing together what happened from ruins and enemies. enormous in scope — like a whole world to get lost in.',
+    year: 2022, studio: 'FromSoftware', genre: 'action RPG', metacritic: 96,
+    review: 'the game gives you no map markers, no list of objectives. you just ride somewhere and find something strange, and then figure out what it means. the difficulty is the point — not punishing, just honest. i\'ve put in more hours than i\'d like to admit and would do it again from the start.',
+    vibes: ['brutal', 'expansive', 'earned'] },
   { name: "Baldur's Gate 3",       tier: 'S', score: 'inf', binary: true,  x: 1080, y: 290, size: 24 },
-  { name: 'Expedition 33',         tier: 'S', score: 'inf', binary: false, x: 820,  y: 340, size: 20, note: 'replayable' },
+  { name: 'Expedition 33',         tier: 'S', score: 'inf', binary: true,  x: 820,  y: 340, size: 20, note: 'replayable' },
   { name: 'Red Dead Redemption 2', tier: 'S', score: 'inf', binary: true,  x: 1180, y: 390, size: 22 },
 
   // ============ HOME STAR — DOTA ============
@@ -123,7 +137,11 @@ const GAMES = [
   // Scattered along and around the nebula band
   { name: 'Sekiro',                tier: 'A', score: 10,   binary: true,  x: 670,  y: 410, size: 13 },
   { name: 'Uncharted 2',           tier: 'A', score: 10,   binary: true,  x: 760,  y: 460, size: 13 },
-  { name: 'The Last of Us 2',      tier: 'A', score: 10,   binary: true,  x: 580,  y: 440, size: 13 },
+  { name: 'The Last of Us 2',      tier: 'A', score: 10,   binary: true,  x: 580,  y: 440, size: 13,
+    premise: 'post-apocalyptic survival story. most of the world has been overtaken by a fungal plague that turns people into something terrible. you play as ellie, navigating both the infected and the humans around her.',
+    year: 2020, studio: 'Naughty Dog', genre: 'action-adventure', metacritic: 93,
+    review: 'this game made me feel things i didn\'t want to feel, which i think is the point. the story puts you in uncomfortable positions on purpose and earns every one of them. i\'d watch you play this just to see your face at certain moments.',
+    vibes: ['harrowing', 'cinematic', 'divisive'] },
   { name: 'God of War',            tier: 'A', score: 10,   binary: true,  x: 690,  y: 510, size: 13 },
   { name: 'Uncharted 4',           tier: 'A', score: 10,   binary: true,  x: 870,  y: 470, size: 13 },
   { name: 'Cyberpunk 2077',        tier: 'A', score: 9.9,  binary: true,  x: 950,  y: 530, size: 12 },
@@ -152,7 +170,12 @@ const GAMES = [
   // ============ A INDIE — pulsars ============
   // Tight cluster on the left side (their own little nebula)
   { name: 'Hades II',              tier: 'AI', score: 9.75, binary: false, x: 200, y: 320, size: 13 },
-  { name: 'Hollow Knight',         tier: 'AI', score: 9.6,  binary: false, x: 130, y: 380, size: 12 },
+  { name: 'Hollow Knight',         tier: 'AI', score: 9.6,  binary: false, x: 130, y: 380, size: 12,
+    premise: 'you\'re a tiny bug exploring a dead kingdom underground. side-scrolling, lonely, surprisingly emotional. similar in feel to terraria but linear and story-driven.',
+    year: 2017, studio: 'Team Cherry', genre: 'action-platformer', metacritic: 87,
+    similarTo: ['Terraria'],
+    review: 'everything is hand-drawn, which sounds small but you feel it in every room. the world is quiet and a little sad and gets under your skin without making a fuss about it. the way it opens up reminded me of how terraria feels — you go in one direction and suddenly you\'re deep in something you didn\'t plan.',
+    vibes: ['melancholy', 'handcrafted', 'vast'] },
   { name: 'Hades',                 tier: 'AI', score: 9.5,  binary: false, x: 240, y: 410, size: 12 },
   { name: 'Crusader Kings 3',      tier: 'AI', score: 9.4,  binary: false, x: 90,  y: 460, size: 12 },
   { name: 'Dispatch',              tier: 'AI', score: 9.32, binary: false, x: 180, y: 480, size: 11 },

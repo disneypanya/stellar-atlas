@@ -214,21 +214,12 @@ function DetailPanel({ game, onClose, idx }) {
           <div className="scale">{isInf ? 'exceeds catalog limits' : 'of 10.00'}</div>
         </div>
 
-        <div className="panel-row">
-          <span className="k">DESIGNATION</span>
-          <span className="v">{catalogId(idx)}</span>
-        </div>
+        {game.premise && (
+          <div className="panel-premise">{game.premise}</div>
+        )}
         <div className="panel-row">
           <span className="k">CLASS</span>
           <span className="v accent">{t.classification}</span>
-        </div>
-        <div className="panel-row">
-          <span className="k">SPECTRAL</span>
-          <span className="v">{spectralFor(game.tier)}</span>
-        </div>
-        <div className="panel-row">
-          <span className="k">STATUS</span>
-          <span className="v">{game.binary ? 'binary system' : 'isolated body'}</span>
         </div>
         {game.apple && (
           <div className="panel-row">
@@ -236,18 +227,60 @@ function DetailPanel({ game, onClose, idx }) {
             <span className="v accent">@apple · co-observation</span>
           </div>
         )}
-        <div className="panel-row">
-          <span className="k">FIRST OBSERVED</span>
-          <span className="v">archive · ongoing</span>
-        </div>
+        {game.year && (
+          <div className="panel-row">
+            <span className="k">YEAR</span>
+            <span className="v">{game.year}</span>
+          </div>
+        )}
+        {game.studio && (
+          <div className="panel-row">
+            <span className="k">STUDIO</span>
+            <span className="v">{game.studio}</span>
+          </div>
+        )}
+        {game.genre && (
+          <div className="panel-row">
+            <span className="k">GENRE</span>
+            <span className="v">{game.genre}</span>
+          </div>
+        )}
+        {game.hours && (
+          <div className="panel-row">
+            <span className="k">HOURS LOGGED</span>
+            <span className="v">{game.hours} hrs</span>
+          </div>
+        )}
+        {game.metacritic && (
+          <div className="panel-row">
+            <span className="k">METACRITIC</span>
+            <span className="v">{game.metacritic}</span>
+          </div>
+        )}
+        {game.similarTo && game.similarTo.length > 0 && (
+          <div className="panel-row">
+            <span className="k">SIMILAR TO</span>
+            <span className="v">{game.similarTo.join(', ')}</span>
+          </div>
+        )}
 
         {game.binary && (
-          <div className="binary-badge">COOPERATIVE ORBIT · BEST OBSERVED WITH COMPANY</div>
+          <div className="binary-badge">RE-VISIT INVITED · BEST OBSERVED WITH COMPANY</div>
         )}
 
         <div className="panel-note">
           {game.note ?? t.short}
         </div>
+        {game.review && (
+          <div className="panel-review">{game.review}</div>
+        )}
+        {game.vibes && game.vibes.length > 0 && (
+          <div className="panel-vibes">
+            {game.vibes.map(v => (
+              <span key={v} className="vibe-tag">{v}</span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

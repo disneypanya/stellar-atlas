@@ -598,6 +598,77 @@
     margin-bottom: 6px;
   }
 
+  /* Premise block — what the game IS, for the audience */
+  .panel-premise {
+    font-family: "Newsreader", "Times New Roman", serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--text);
+    line-height: 1.5;
+    padding: 20px 0;
+    border-top: 1px solid var(--line);
+    margin-bottom: 8px;
+  }
+  .panel-premise::before {
+    content: "premise ";
+    font-family: "VT323", monospace;
+    font-style: normal;
+    color: var(--text-mute);
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  /* Review block — longer subjective prose */
+  .panel-review {
+    font-family: "Newsreader", "Times New Roman", serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--text);
+    line-height: 1.55;
+    padding: 18px 0;
+    border-top: 1px solid var(--line);
+    margin-top: 4px;
+  }
+  .panel-review::before {
+    content: "field review ";
+    font-family: "VT323", monospace;
+    font-style: normal;
+    color: var(--accent, var(--nebula-teal));
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  /* Vibes — mood tag chips */
+  .panel-vibes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 14px 0 6px;
+    border-top: 1px solid var(--line);
+  }
+  .panel-vibes::before {
+    content: "vibes ";
+    font-family: "VT323", monospace;
+    color: var(--text-mute);
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .vibe-tag {
+    font-family: "VT323", monospace;
+    font-size: 14px;
+    color: var(--accent, var(--nebula-teal));
+    border: 1px solid var(--accent, var(--nebula-teal));
+    padding: 2px 9px;
+    letter-spacing: 0.12em;
+    opacity: 0.75;
+  }
+
   /* Binary system badge */
   .binary-badge {
     display: inline-flex;
