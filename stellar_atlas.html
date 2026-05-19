@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STELLAR ATLAS — personal cosmic catalog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=VT323&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep:        #03060e;
+    --bg-mid:         #060c1f;
+    --bg-pane:        #0a1226;
+    --bg-pane-2:      #0e1830;
+    --nebula-cyan:    #4fc3d9;
+    --nebula-teal:    #7defff;
+    --nebula-coral:   #ff9c7a;
+    --nebula-pink:    #f8b8d5;
+    --star-white:     #ffffff;
+
+    --tier-s:         #fff5d0;
+    --tier-s-glow:    #ffd576;
+    --tier-a:         #b8eaff;
+    --tier-a-glow:    #4fc3d9;
+    --tier-ai:        #e8b8ff;
+    --tier-ai-glow:   #c878ff;
+    --tier-b:         #ffc4a3;
+    --tier-b-glow:    #ff9466;
+    --tier-c:         #ff9788;
+    --tier-c-glow:    #cc5544;
+    --dota:           #6cf0ff;
+
+    --text:           #dbe6f5;
+    --text-dim:       #8198b8;
+    --text-mute:      #4a5a76;
+    --line:           #1c2a45;
+    --line-bright:    #2a4060;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: "VT323", monospace;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  #root { width: 100%; height: 100%; position: relative; }
+
+  /* ========== BOOT SPLASH ========================================= */
+  #boot {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg-deep);
+    display: grid; place-items: center;
+    transition: opacity 0.8s ease;
+    color: var(--nebula-teal);
+  }
+  #boot.hide { opacity: 0; pointer-events: none; }
+  #boot .boot-inner { text-align: center; }
+  #boot .boot-title {
+    font-family: "Major Mono Display", monospace;
+    font-size: 32px;
+    letter-spacing: 0.12em;
+    color: var(--nebula-teal);
+    text-shadow: 0 0 24px rgba(125, 239, 255, 0.4);
+  }
+  #boot .boot-sub {
+    font-family: "VT323", monospace;
+    font-size: 20px;
+    color: var(--text-dim);
+    margin-top: 18px;
+    letter-spacing: 0.1em;
+  }
+  #boot .boot-sub .blink { animation: blink 0.9s steps(2) infinite; color: var(--nebula-coral); }
+  @keyframes blink { 50% { opacity: 0.2; } }
+
+  /* ========== TYPOGRAPHY ========================================= */
+  .mono   { font-family: "Major Mono Display", monospace; letter-spacing: 0.08em; }
+  .vt     { font-family: "VT323", monospace; letter-spacing: 0.02em; }
+  .serif  { font-family: "Newsreader", "Times New Roman", serif; font-style: italic; }
+
+  /* ========== ATMOSPHERE ========================================= */
+  /* Deep starfield — base + accent layers, drift slowly with parallax */
+  .stage {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 70% 25%, rgba(79, 195, 217, 0.10) 0%, transparent 45%),
+      radial-gradient(ellipse at 30% 80%, rgba(40, 80, 140, 0.18) 0%, transparent 50%),
+      linear-gradient(180deg, #050a18 0%, #03060e 100%);
+    overflow: hidden;
+  }
+  .stars-bg {
+    position: absolute; inset: -10%;
+    background-image:
+      radial-gradient(1px 1px at 13% 7%,   #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 23% 88%,  #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 31% 42%,  #cfe6ff 50%, transparent 51%),
+      radial-gradient(1px 1px at 39% 71%,  #fff 50%, transparent 51%),
+      radial-gradient(2px 2px at 47% 18%,  #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 53% 53%,  #b8d4ff 50%, transparent 51%),
+      radial-gradient(1px 1px at 61% 29%,  #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 69% 84%,  #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 77% 11%,  #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 83% 67%,  #d8e6ff 50%, transparent 51%),
+      radial-gradient(2px 2px at 91% 36%,  #fff 50%, transparent 51%),
+      radial-gradient(1px 1px at 7% 49%,   #fff 50%, transparent 51%);
+    background-size: 220px 220px;
+    background-repeat: repeat;
+    opacity: 0.7;
+    animation: starsDrift 180s linear infinite;
+  }
+  .stars-bg.layer-2 {
+    background-size: 320px 320px;
+    opacity: 0.5;
+    animation-duration: 240s;
+    animation-direction: reverse;
+  }
+  .stars-bg.layer-3 {
+    background-size: 480px 480px;
+    opacity: 0.35;
+    animation-duration: 360s;
+  }
+  @keyframes starsDrift {
+    from { transform: translate(0, 0); }
+    to   { transform: translate(-30px, -45px); }
+  }
+
+  /* Twinkling stars overlay */
+  .twinkle {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle var(--dur, 3s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(0.7); }
+    50%      { opacity: 1;   transform: scale(1.2); }
+  }
+
+  /* The big diagonal nebula band — matches the reference image */
+  .nebula {
+    position: absolute;
+    width: 1800px; height: 1800px;
+    left: -10%; top: -30%;
+    transform: rotate(-22deg);
+    background:
+      /* bright cyan spine */
+      radial-gradient(ellipse 50% 8% at 55% 50%,
+        rgba(125, 239, 255, 0.55) 0%,
+        rgba(79, 195, 217, 0.30) 25%,
+        rgba(79, 195, 217, 0.10) 50%,
+        transparent 70%),
+      /* coral/pink edge along one side */
+      radial-gradient(ellipse 40% 7% at 50% 52%,
+        rgba(255, 156, 122, 0.35) 0%,
+        rgba(248, 184, 213, 0.18) 30%,
+        transparent 60%),
+      /* outer halo */
+      radial-gradient(ellipse 70% 15% at 55% 50%,
+        rgba(79, 195, 217, 0.07) 0%,
+        rgba(50, 80, 130, 0.10) 30%,
+        transparent 70%);
+    filter: blur(8px);
+    opacity: 0.95;
+    pointer-events: none;
+    animation: nebulaShift 32s ease-in-out infinite alternate;
+  }
+  .nebula.haze {
+    width: 2400px; height: 2400px;
+    left: -30%; top: -50%;
+    filter: blur(50px);
+    opacity: 0.45;
+    transform: rotate(-22deg);
+  }
+  @keyframes nebulaShift {
+    0%   { transform: rotate(-22deg) translate(0, 0); filter: blur(8px) brightness(1); }
+    100% { transform: rotate(-22.5deg) translate(-20px, 10px); filter: blur(9px) brightness(1.1); }
+  }
+
+  /* Radar / telescope sweep */
+  .scan {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(125, 239, 255, 0) 49%,
+      rgba(125, 239, 255, 0.06) 50%,
+      rgba(125, 239, 255, 0) 51%,
+      transparent 100%);
+    background-size: 100% 200%;
+    background-repeat: no-repeat;
+    animation: scanSweep 18s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  @keyframes scanSweep {
+    0%   { background-position: 0 -100%; }
+    100% { background-position: 0  200%; }
+  }
+
+  /* ========== HEADER ============================================= */
+  .hud-top {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 16px 28px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+  }
+  .hud-top > * { pointer-events: auto; }
+  .hud-left .title {
+    font-family: "Major Mono Display", monospace;
+    font-size: 22px;
+    color: var(--nebula-teal);
+    letter-spacing: 0.18em;
+    line-height: 1;
+    text-shadow: 0 0 18px rgba(125, 239, 255, 0.25);
+  }
+  .hud-left .sub {
+    font-family: "VT323", monospace;
+    font-size: 16px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    letter-spacing: 0.18em;
+  }
+  .hud-left .sub b { color: var(--nebula-coral); font-weight: normal; }
+
+  .hud-coords {
+    font-family: "VT323", monospace;
+    color: var(--text-dim);
+    font-size: 15px;
+    line-height: 1.35;
+    letter-spacing: 0.1em;
+    text-align: right;
+    min-width: 180px;
+  }
+  .hud-coords .live {
+    color: var(--nebula-coral);
+    animation: blink 1.4s steps(2) infinite;
+  }
+  .hud-coords .val {
+    color: var(--nebula-teal);
+  }
+
+  /* ========== TABS / NAV ========================================= */
+  .nav {
+    position: fixed;
+    top: 84px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 90;
+    display: flex;
+    gap: 0;
+    background: rgba(10, 18, 38, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 0;
+  }
+  .nav-btn {
+    font-family: "Major Mono Display", monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    padding: 10px 22px;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active {
+    color: var(--nebula-teal);
+    background: rgba(79, 195, 217, 0.08);
+  }
+  .nav-btn.active::after {
+    content: "";
+    position: absolute;
+    bottom: -1px; left: 12%; right: 12%;
+    height: 1px;
+    background: var(--nebula-teal);
+    box-shadow: 0 0 8px var(--nebula-teal);
+  }
+
+  /* ========== FOOTER STATUS BAR ================================== */
+  .hud-bottom {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 120;
+    padding: 10px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: "VT323", monospace;
+    font-size: 14px;
+    color: var(--text-mute);
+    letter-spacing: 0.12em;
+    border-top: 1px solid var(--line);
+    background: linear-gradient(to top, rgba(3, 6, 14, 0.85), rgba(3, 6, 14, 0));
+    pointer-events: none;
+  }
+  .hud-bottom .grp { display: flex; gap: 20px; }
+  .hud-bottom .grp span b { color: var(--nebula-teal); font-weight: normal; }
+  .hud-bottom .pulse-dot {
+    display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--nebula-coral);
+    margin-right: 8px;
+    animation: pulse 1.3s ease-in-out infinite;
+    vertical-align: middle;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50%      { opacity: 1;   transform: scale(1.15); }
+  }
+
+  /* ========== ATLAS — STAR MAP =================================== */
+  .atlas {
+    position: absolute; inset: 0;
+  }
+
+  /* Star = a small div with a glow shadow. Sized via --size. */
+  .star {
+    position: absolute;
+    width: var(--size, 10px); height: var(--size, 10px);
+    border-radius: 50%;
+    background: var(--color, #fff);
+    box-shadow:
+      0 0 calc(var(--size) * 0.6) calc(var(--size) * 0.15) var(--glow, rgba(255,255,255,0.6)),
+      0 0 calc(var(--size) * 1.6) calc(var(--size) * 0.3)  var(--glow, rgba(255,255,255,0.3)),
+      0 0 calc(var(--size) * 3.5) calc(var(--size) * 0.5)  var(--glow-soft, rgba(255,255,255,0.15));
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    transition: transform 0.18s ease;
+    z-index: 10;
+  }
+  .star::before {
+    content: "";
+    position: absolute; inset: -200%;
+    border-radius: 50%;
+  }
+  .star.twinkle-it {
+    animation: starTwinkle var(--twinkle-dur, 4s) ease-in-out infinite;
+    animation-delay: var(--twinkle-delay, 0s);
+  }
+  @keyframes starTwinkle {
+    0%, 100% { filter: brightness(0.85); }
+    50%      { filter: brightness(1.25); }
+  }
+  .star:hover {
+    transform: translate(-50%, -50%) scale(1.4);
+    z-index: 20;
+  }
+  .star.selected {
+    transform: translate(-50%, -50%) scale(1.6);
+    z-index: 25;
+  }
+  .star.selected::after {
+    content: "";
+    position: absolute;
+    left: 50%; top: 50%;
+    width: calc(var(--size, 10px) * 4);
+    height: calc(var(--size, 10px) * 4);
+    border: 1px solid var(--color, #fff);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: ringPulse 1.8s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes ringPulse {
+    0%   { opacity: 1; transform: translate(-50%, -50%) scale(0.6); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
+  }
+
+  /* Diffraction spikes — for bright stars (S tier + DOTA) */
+  .spike-host {
+    position: absolute;
+    width: 0; height: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 9;
+  }
+  .spike {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: var(--spike-len, 80px);
+    height: 1px;
+    background: linear-gradient(to right,
+      transparent 0%,
+      var(--spike-color, #fff) 40%,
+      var(--spike-color, #fff) 60%,
+      transparent 100%);
+    transform-origin: center;
+    transform: translate(-50%, -50%) rotate(var(--ang, 0deg));
+    opacity: 0.75;
+    filter: blur(0.4px);
+    animation: spikeBreath 4s ease-in-out infinite;
+    animation-delay: var(--breath, 0s);
+  }
+  @keyframes spikeBreath {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 0.95; }
+  }
+
+  /* Label that appears on hover/select */
+  .star-label {
+    position: absolute;
+    transform: translate(-50%, -50%) translateY(-26px);
+    font-family: "VT323", monospace;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    background: rgba(6, 12, 31, 0.85);
+    border: 1px solid var(--line-bright);
+    padding: 3px 9px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 30;
+    box-shadow: 0 0 12px rgba(0,0,0,0.7);
+  }
+  .star-label::before {
+    content: "";
+    position: absolute;
+    left: 50%; bottom: -5px;
+    width: 1px; height: 5px;
+    background: var(--line-bright);
+    transform: translateX(-50%);
+  }
+
+  /* Tier labels floating on the atlas */
+  .tier-marker {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    text-align: center;
+    z-index: 5;
+  }
+  .tier-marker .name {
+    font-family: "Major Mono Display", monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--color, var(--text-dim));
+    opacity: 0.55;
+    text-shadow: 0 0 10px var(--color, transparent);
+    white-space: nowrap;
+  }
+  .tier-marker .id {
+    font-family: "VT323", monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+    letter-spacing: 0.18em;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+
+  /* ========== DETAIL PANEL ======================================= */
+  .panel {
+    position: fixed;
+    right: 0; top: 0;
+    bottom: 36px;
+    width: 380px;
+    background: linear-gradient(180deg,
+      rgba(6, 12, 28, 0.88) 0%,
+      rgba(4, 8, 20, 0.93) 100%);
+    backdrop-filter: blur(16px);
+    border-left: 1px solid var(--line-bright);
+    z-index: 110;
+    transform: translateX(100%);
+    transition: transform 0.45s cubic-bezier(0.32, 1, 0.45, 1);
+    overflow-y: auto;
+    padding: 110px 28px 40px;
+  }
+  .panel.open { transform: translateX(0); }
+  .panel-close {
+    position: absolute;
+    top: 90px; right: 22px;
+    font-family: "VT323", monospace;
+    font-size: 22px;
+    color: var(--text-mute);
+    background: none;
+    border: 1px solid var(--line);
+    width: 28px; height: 28px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .panel-close:hover {
+    color: var(--nebula-coral);
+    border-color: var(--nebula-coral);
+  }
+
+  .panel-meta {
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    color: var(--text-mute);
+    letter-spacing: 0.2em;
+    margin-bottom: 14px;
+  }
+  .panel-meta .dot { color: var(--nebula-coral); margin: 0 8px; }
+  .panel-meta .tier {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid currentColor;
+    margin-right: 8px;
+  }
+
+  .panel-name {
+    font-family: "Major Mono Display", monospace;
+    font-size: 26px;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    line-height: 1.15;
+    margin-bottom: 6px;
+    word-break: break-word;
+  }
+  .panel-class {
+    font-family: "VT323", monospace;
+    font-size: 17px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+  }
+  .panel-class b { color: var(--accent, var(--nebula-teal)); font-weight: normal; }
+
+  .panel-magnitude {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 18px 0;
+    margin-bottom: 22px;
+    text-align: center;
+    position: relative;
+  }
+  .panel-magnitude .label {
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    color: var(--text-mute);
+    letter-spacing: 0.28em;
+    margin-bottom: 4px;
+  }
+  .panel-magnitude .value {
+    font-family: "Major Mono Display", monospace;
+    font-size: 46px;
+    color: var(--accent, var(--nebula-teal));
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-shadow: 0 0 28px var(--accent, rgba(125,239,255,0.5));
+  }
+  .panel-magnitude .value.inf {
+    font-size: 64px;
+    line-height: 0.8;
+  }
+  .panel-magnitude .scale {
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    color: var(--text-mute);
+    letter-spacing: 0.2em;
+    margin-top: 4px;
+  }
+
+  .panel-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+    font-family: "VT323", monospace;
+    font-size: 15px;
+  }
+  .panel-row:last-child { border-bottom: none; }
+  .panel-row .k {
+    color: var(--text-mute);
+    letter-spacing: 0.18em;
+    font-size: 13px;
+  }
+  .panel-row .v {
+    color: var(--text);
+    letter-spacing: 0.04em;
+    text-align: right;
+    max-width: 60%;
+  }
+  .panel-row .v.accent { color: var(--accent, var(--nebula-teal)); }
+
+  .panel-note {
+    font-family: "Newsreader", "Times New Roman", serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    padding: 18px 0;
+    border-top: 1px solid var(--line);
+    margin-top: 14px;
+  }
+  .panel-note::before {
+    content: "log ";
+    font-family: "VT323", monospace;
+    font-style: normal;
+    color: var(--text-mute);
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  /* Binary system badge */
+  .binary-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    margin-top: 6px;
+    border: 1px solid var(--nebula-pink);
+    color: var(--nebula-pink);
+    font-family: "VT323", monospace;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+  }
+  .binary-badge::before {
+    content: "◉◉";
+    color: var(--nebula-pink);
+    animation: blink 1.6s steps(2) infinite;
+  }
+
+  /* ========== CATALOG VIEW ======================================= */
+  .catalog {
+    position: absolute;
+    top: 130px; left: 0; right: 0; bottom: 36px;
+    overflow-y: auto;
+    padding: 20px 40px 40px;
+    z-index: 50;
+  }
+  .catalog-inner { max-width: 1300px; margin: 0 auto; }
+  .cat-group { margin-bottom: 56px; }
+  .cat-group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 22px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 22px;
+  }
+  .cat-group-head .glyph {
+    font-family: "Major Mono Display", monospace;
+    font-size: 38px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    line-height: 1;
+    text-shadow: 0 0 20px var(--accent);
+    min-width: 1.4em;
+  }
+  .cat-group-head .name {
+    font-family: "Major Mono Display", monospace;
+    font-size: 14px;
+    letter-spacing: 0.28em;
+    color: var(--text);
+  }
+  .cat-group-head .name b { color: var(--accent); font-weight: normal; }
+  .cat-group-head .desc {
+    font-family: "Newsreader", serif;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 15px;
+    margin-left: auto;
+    text-align: right;
+    max-width: 50%;
+  }
+  .cat-group-head .count {
+    font-family: "VT323", monospace;
+    color: var(--text-mute);
+    font-size: 15px;
+    letter-spacing: 0.18em;
+  }
+
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .cat-card {
+    background: rgba(10, 18, 38, 0.5);
+    border: 1px solid var(--line);
+    padding: 14px 16px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .cat-card::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+  .cat-card:hover {
+    border-color: var(--accent);
+    background: rgba(10, 18, 38, 0.75);
+    transform: translateX(2px);
+  }
+  .cat-card:hover::before {
+    width: 3px;
+    opacity: 1;
+    box-shadow: 0 0 14px var(--accent);
+  }
+  .cat-card .cat-id {
+    font-family: "VT323", monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+    letter-spacing: 0.2em;
+    margin-bottom: 4px;
+  }
+  .cat-card .cat-name {
+    font-family: "Major Mono Display", monospace;
+    font-size: 14px;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+    margin-bottom: 8px;
+    word-break: break-word;
+  }
+  .cat-card .cat-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .cat-card .cat-mag {
+    font-family: "Major Mono Display", monospace;
+    font-size: 16px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+  .cat-card .cat-mag.inf { font-size: 22px; line-height: 0.8; }
+  .cat-card .cat-binary {
+    font-family: "VT323", monospace;
+    font-size: 12px;
+    color: var(--nebula-pink);
+    letter-spacing: 0.16em;
+  }
+
+  /* ========== LOG VIEW =========================================== */
+  .log-view {
+    position: absolute;
+    top: 130px; left: 0; right: 0; bottom: 36px;
+    overflow-y: auto;
+    padding: 20px 40px 40px;
+    z-index: 50;
+  }
+  .log-inner { max-width: 920px; margin: 0 auto; }
+  .log-block {
+    background: rgba(10, 18, 38, 0.5);
+    border: 1px solid var(--line);
+    padding: 24px 30px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .log-block .lb-tag {
+    position: absolute;
+    top: -10px; left: 20px;
+    background: var(--bg-deep);
+    padding: 0 10px;
+    font-family: "Major Mono Display", monospace;
+    font-size: 11px;
+    color: var(--nebula-teal);
+    letter-spacing: 0.3em;
+  }
+  .log-block h3 {
+    font-family: "Major Mono Display", monospace;
+    font-size: 18px;
+    color: var(--text);
+    letter-spacing: 0.06em;
+    margin-bottom: 14px;
+  }
+  .log-block p {
+    font-family: "Newsreader", serif;
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+  .log-block p b { color: var(--nebula-teal); font-weight: normal; font-style: normal; font-family: "VT323", monospace; letter-spacing: 0.1em; }
+
+  /* Stat grid */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 30px;
+  }
+  .stat-cell {
+    background: rgba(10, 18, 38, 0.5);
+    border: 1px solid var(--line);
+    padding: 18px 16px;
+  }
+  .stat-cell .sk {
+    font-family: "VT323", monospace;
+    font-size: 12px;
+    color: var(--text-mute);
+    letter-spacing: 0.24em;
+    margin-bottom: 4px;
+  }
+  .stat-cell .sv {
+    font-family: "Major Mono Display", monospace;
+    font-size: 28px;
+    color: var(--nebula-teal);
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+  }
+  .stat-cell .ss {
+    font-family: "VT323", monospace;
+    font-size: 14px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+
+  /* DOTA call-out */
+  .dota-block {
+    background:
+      radial-gradient(ellipse at 80% 50%, rgba(108, 240, 255, 0.15) 0%, transparent 60%),
+      rgba(10, 18, 38, 0.5);
+    border: 1px solid var(--dota);
+    box-shadow: inset 0 0 30px rgba(108, 240, 255, 0.08);
+  }
+  .dota-block .lb-tag { color: var(--dota); }
+  .dota-block h3 { color: var(--dota); }
+
+  /* Tier filters in atlas */
+  .tier-filters {
+    position: fixed;
+    left: 50%;
+    bottom: 44px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 70;
+    background: rgba(6, 12, 31, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--line);
+    padding: 6px;
+  }
+  .tf-btn {
+    font-family: "Major Mono Display", monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    padding: 7px 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-mute);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tf-btn:hover { color: var(--text); }
+  .tf-btn.on { color: var(--col, var(--nebula-teal)); border-color: var(--col, var(--nebula-teal)); background: rgba(125,239,255,0.05); }
+
+  /* Misc utility */
+  .scroll-mask { overflow-y: auto; }
+  .scroll-mask::-webkit-scrollbar { width: 6px; background: transparent; }
+  .scroll-mask::-webkit-scrollbar-thumb { background: var(--line-bright); }
+
+  /* Slide-in animation for panel content */
+  .fade-in { animation: fadeUp 0.5s ease forwards; opacity: 0; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div class="boot-inner">
+    <div class="boot-title">STELLAR ATLAS</div>
+    <div class="boot-sub">initializing telescope<span class="blink">...</span></div>
+  </div>
+</div>
+
+<div id="root"></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+// ====================================================================
+// TIER DEFINITIONS — cosmic classifications
+// ====================================================================
+const TIERS = {
+  S: {
+    label: 'S',
+    classification: 'SINGULARITY',
+    classRoman: 'CLASS I',
+    color: '#fff5d0',
+    glow: '#ffd576',
+    glowSoft: 'rgba(255, 213, 118, 0.25)',
+    accent: '#ffd576',
+    desc: 'magnitude beyond instruments. perceived as ∞.',
+    short: 'magnitude exceeds catalog limits.',
+  },
+  A: {
+    label: 'A',
+    classification: 'SUPERGIANT',
+    classRoman: 'CLASS II',
+    color: '#b8eaff',
+    glow: '#4fc3d9',
+    glowSoft: 'rgba(79, 195, 217, 0.25)',
+    accent: '#7defff',
+    desc: 'main sequence luminaries. stable, observed, confirmed.',
+    short: 'high luminosity. confirmed observations.',
+  },
+  AI: {
+    label: 'A·i',
+    classification: 'PULSAR',
+    classRoman: 'CLASS II.5',
+    color: '#e8b8ff',
+    glow: '#c878ff',
+    glowSoft: 'rgba(200, 120, 255, 0.25)',
+    accent: '#d8a8ff',
+    desc: 'compact, intense, hand-built. emit on a narrow beam.',
+    short: 'small-craft origin. high energy density.',
+  },
+  B: {
+    label: 'B',
+    classification: 'MAIN SEQUENCE',
+    classRoman: 'CLASS III',
+    color: '#ffc4a3',
+    glow: '#ff9466',
+    glowSoft: 'rgba(255, 148, 102, 0.25)',
+    accent: '#ffb088',
+    desc: 'steady glow. catalogued, occasionally revisited.',
+    short: 'stable but unremarkable.',
+  },
+  C: {
+    label: 'C',
+    classification: 'BROWN DWARF',
+    classRoman: 'CLASS IV',
+    color: '#ff9788',
+    glow: '#cc5544',
+    glowSoft: 'rgba(204, 85, 68, 0.20)',
+    accent: '#ff8a78',
+    desc: 'failed ignition. archived for completeness.',
+    short: 'sub-stellar. dim signal.',
+  },
+  DOTA: {
+    label: '☉',
+    classification: 'HOME STAR',
+    classRoman: 'CLASS Ø',
+    color: '#6cf0ff',
+    glow: '#6cf0ff',
+    glowSoft: 'rgba(108, 240, 255, 0.35)',
+    accent: '#6cf0ff',
+    desc: 'reference frame. all magnitudes calibrated against this.',
+    short: 'calibration object. unmoved.',
+  },
+};
+
+// ====================================================================
+// GAME CATALOG — your tier list, transposed into cosmic form
+// ====================================================================
+// flags:
+//   binary = "would replay if u wanna watch" → cooperative orbit
+//   apple  = It Takes Two special case
+//
+// Positions are in viewBox units (0-1400 x, 0-900 y).
+// Hand-arranged into tier-clusters along the diagonal nebula band.
+
+const GAMES = [
+  // ============ S TIER — singularities ============
+  // Brightest objects, scattered along the bright spine of the nebula (upper-right region)
+  { name: 'Elden Ring',            tier: 'S', score: 'inf', binary: true,  x: 920,  y: 240, size: 22 },
+  { name: "Baldur's Gate 3",       tier: 'S', score: 'inf', binary: true,  x: 1080, y: 290, size: 24 },
+  { name: 'Expedition 33',         tier: 'S', score: 'inf', binary: false, x: 820,  y: 340, size: 20, note: 'replayable' },
+  { name: 'Red Dead Redemption 2', tier: 'S', score: 'inf', binary: true,  x: 1180, y: 390, size: 22 },
+
+  // ============ HOME STAR — DOTA ============
+  { name: 'DOTA 2',                tier: 'DOTA', score: '∞/∞', binary: false, x: 1240, y: 660, size: 28,
+    note: 'home star. all other magnitudes calibrated against this.' },
+
+  // ============ A TIER — supergiants ============
+  // Scattered along and around the nebula band
+  { name: 'Sekiro',                tier: 'A', score: 10,   binary: true,  x: 670,  y: 410, size: 13 },
+  { name: 'Uncharted 2',           tier: 'A', score: 10,   binary: true,  x: 760,  y: 460, size: 13 },
+  { name: 'The Last of Us 2',      tier: 'A', score: 10,   binary: true,  x: 580,  y: 440, size: 13 },
+  { name: 'God of War',            tier: 'A', score: 10,   binary: true,  x: 690,  y: 510, size: 13 },
+  { name: 'Uncharted 4',           tier: 'A', score: 10,   binary: true,  x: 870,  y: 470, size: 13 },
+  { name: 'Cyberpunk 2077',        tier: 'A', score: 9.9,  binary: true,  x: 950,  y: 530, size: 12 },
+  { name: 'Persona 4',             tier: 'A', score: 9.83, binary: true,  x: 510,  y: 380, size: 12 },
+  { name: 'Persona 5',             tier: 'A', score: 9.5,  binary: false, x: 1020, y: 460, size: 12 },
+  { name: 'FF7 Rebirth',           tier: 'A', score: 9.4,  binary: false, x: 1090, y: 540, size: 12 },
+  { name: 'Ghost of Yotei',        tier: 'A', score: 9.28, binary: false, x: 800,  y: 380, size: 11 },
+  { name: 'Death Stranding',       tier: 'A', score: 9.1,  binary: false, x: 600,  y: 540, size: 11 },
+  { name: 'It Takes Two',          tier: 'A', score: 9.05, binary: true,  apple: true, x: 460, y: 480, size: 12,
+    note: 'cooperative orbit with Apple. effective magnitude → 10.' },
+  { name: "Divinity: Original Sin 2", tier: 'A', score: 9, binary: false, x: 1170, y: 470, size: 11 },
+  { name: 'Monster Hunter World',  tier: 'A', score: 9,    binary: false, x: 1240, y: 530, size: 11 },
+  { name: 'The Last of Us 1',      tier: 'A', score: 9,    binary: true,  x: 770,  y: 580, size: 11 },
+  { name: 'Dark Souls 3',          tier: 'A', score: 9,    binary: true,  x: 670,  y: 600, size: 11 },
+  { name: "Spider-Man: Miles Morales", tier: 'A', score: 9, binary: true, x: 540,  y: 570, size: 11 },
+  { name: 'Armored Core 6',        tier: 'A', score: 9,    binary: false, x: 1300, y: 440, size: 11 },
+  { name: 'Dragon Age: Origins',   tier: 'A', score: 9,    binary: false, x: 430,  y: 530, size: 11 },
+  { name: "Assassin's Creed Odyssey", tier: 'A', score: 9, binary: false, x: 380,  y: 410, size: 11 },
+  { name: 'Dishonored',            tier: 'A', score: 9,    binary: true,  x: 420,  y: 600, size: 11 },
+  { name: 'Spider-Man',            tier: 'A', score: 8,    binary: true,  x: 850,  y: 620, size: 10 },
+  { name: 'Ghost of Tsushima',     tier: 'A', score: 8,    binary: false, x: 980,  y: 620, size: 10 },
+  { name: 'Battlefield 1',         tier: 'A', score: 8,    binary: false, x: 1100, y: 640, size: 10 },
+  { name: 'Uncharted',             tier: 'A', score: 8,    binary: true,  x: 720,  y: 660, size: 10 },
+  { name: 'Horizon Zero Dawn',     tier: 'A', score: 8,    binary: false, x: 580,  y: 670, size: 10 },
+
+  // ============ A INDIE — pulsars ============
+  // Tight cluster on the left side (their own little nebula)
+  { name: 'Hades II',              tier: 'AI', score: 9.75, binary: false, x: 200, y: 320, size: 13 },
+  { name: 'Hollow Knight',         tier: 'AI', score: 9.6,  binary: false, x: 130, y: 380, size: 12 },
+  { name: 'Hades',                 tier: 'AI', score: 9.5,  binary: false, x: 240, y: 410, size: 12 },
+  { name: 'Crusader Kings 3',      tier: 'AI', score: 9.4,  binary: false, x: 90,  y: 460, size: 12 },
+  { name: 'Dispatch',              tier: 'AI', score: 9.32, binary: false, x: 180, y: 480, size: 11 },
+  { name: 'Dead Cells',            tier: 'AI', score: 9.25, binary: false, x: 280, y: 490, size: 11 },
+  { name: 'Slay the Princess',     tier: 'AI', score: 9.1,  binary: false, x: 140, y: 540, size: 11 },
+  { name: 'Celeste',               tier: 'AI', score: 9,    binary: false, x: 230, y: 560, size: 11 },
+  { name: 'Stardew Valley',        tier: 'AI', score: 9,    binary: false, x: 70,  y: 560, size: 11 },
+  { name: 'Chained Echoes',        tier: 'AI', score: 8.5,  binary: false, x: 310, y: 610, size: 10 },
+
+  // ============ B TIER — main sequence (outer halo) ============
+  { name: 'Granblue Fantasy Relink', tier: 'B', score: 7.9, binary: false, x: 100, y: 670, size: 9 },
+  { name: 'Horizon Forbidden West',  tier: 'B', score: 7.5, binary: false, x: 250, y: 695, size: 9 },
+  { name: 'Valorant',                tier: 'B', score: 7.4, binary: false, x: 420, y: 715, size: 8 },
+  { name: 'Devil May Cry',           tier: 'B', score: 7.1, binary: false, x: 580, y: 720, size: 8 },
+  { name: 'Spider-Man 2',            tier: 'B', score: 7,   binary: false, x: 740, y: 720, size: 8 },
+  { name: 'Uncharted 3',             tier: 'B', score: 6.5, binary: true,  x: 900, y: 715, size: 8 },
+  { name: 'God of War Ragnarök',     tier: 'B', score: 6.5, binary: false, x: 1060, y: 700, size: 8 },
+  { name: 'Tales of Arise',          tier: 'B', score: 6.2, binary: false, x: 1200, y: 695, size: 8 },
+  { name: 'Code Vein',               tier: 'B', score: 6,   binary: false, x: 1330, y: 670, size: 7 },
+
+  // ============ C TIER — brown dwarfs (extreme outskirts) ============
+  { name: 'Monster Hunter Wilds',  tier: 'C', score: 5, binary: false, x: 50,   y: 745, size: 6 },
+  { name: 'Crimson Desert',        tier: 'C', score: 4, binary: false, x: 1360, y: 745, size: 6 },
+];
+
+// stable catalog id from index (e.g. "SC-001")
+const catalogId = (i) => `SC-${String(i + 1).padStart(3, '0')}`;
+// per-tier spectral class for flavor
+const spectralFor = (tier) => ({
+  S:    'O-type · hyperluminous',
+  A:    'B-type · blue supergiant',
+  AI:   'pulsar · neutron',
+  B:    'F-type · main sequence',
+  C:    'M-type · sub-luminous',
+  DOTA: 'G-type · home star',
+}[tier]);
+
+// ====================================================================
+// COMPONENTS
+// ====================================================================
+
+function StarLabel({ children, color }) {
+  return (
+    <div className="star-label" style={{ color }}>{children}</div>
+  );
+}
+
+// Diffraction spikes — for the brightest objects (S + DOTA)
+function Spikes({ color, length = 80 }) {
+  // 4-point cross + small diagonals
+  return (
+    <div className="spike-host">
+      <div className="spike" style={{ '--ang': '0deg',   '--spike-color': color, '--spike-len': `${length}px` }}/>
+      <div className="spike" style={{ '--ang': '90deg',  '--spike-color': color, '--spike-len': `${length * 0.92}px`, '--breath': '0.4s' }}/>
+      <div className="spike" style={{ '--ang': '45deg',  '--spike-color': color, '--spike-len': `${length * 0.5}px`,  '--breath': '0.8s', opacity: 0.4 }}/>
+      <div className="spike" style={{ '--ang': '-45deg', '--spike-color': color, '--spike-len': `${length * 0.5}px`,  '--breath': '1.2s', opacity: 0.4 }}/>
+    </div>
+  );
+}
+
+// Single game star on the atlas
+function StarBody({ game, idx, isSelected, isHovered, onClick, onHover, hidden }) {
+  const t = TIERS[game.tier];
+  const showSpikes = game.tier === 'S' || game.tier === 'DOTA';
+  const spikeLen = game.tier === 'DOTA' ? 130 : (game.size * 5);
+  const twinkleDur = 2.5 + (idx * 0.17) % 3;
+  const twinkleDelay = (idx * 0.43) % 4;
+
+  if (hidden) return null;
+
+  const xPct = (game.x / 1400) * 100;
+  const yPct = (game.y / 900) * 100;
+
+  return (
+    <>
+      {showSpikes && (
+        <div style={{ position: 'absolute', left: `${xPct}%`, top: `${yPct}%`, pointerEvents: 'none' }}>
+          <Spikes color={t.glow} length={spikeLen} />
+        </div>
+      )}
+      <div
+        className={`star twinkle-it ${isSelected ? 'selected' : ''}`}
+        style={{
+          left: `${xPct}%`,
+          top: `${yPct}%`,
+          '--size': `${game.size}px`,
+          '--color': t.color,
+          '--glow': t.glow,
+          '--glow-soft': t.glowSoft,
+          '--twinkle-dur': `${twinkleDur}s`,
+          '--twinkle-delay': `${twinkleDelay}s`,
+        }}
+        onClick={() => onClick(game)}
+        onMouseEnter={() => onHover(game)}
+        onMouseLeave={() => onHover(null)}
+      />
+      {(isSelected || isHovered) && (
+        <div style={{ position: 'absolute', left: `${xPct}%`, top: `${yPct}%`, pointerEvents: 'none' }}>
+          <StarLabel color={t.color}>{game.name.toUpperCase()}</StarLabel>
+        </div>
+      )}
+    </>
+  );
+}
+
+// Floating tier markers on atlas
+function TierMarkers() {
+  const items = [
+    { tier: 'S',    label: 'SINGULARITY',   id: 'CLASS-I',    x: 920,  y: 130 },
+    { tier: 'AI',   label: 'PULSAR FIELD',  id: 'CLASS-II.5', x: 180,  y: 220 },
+    { tier: 'A',    label: 'SUPERGIANT',    id: 'CLASS-II',   x: 870,  y: 395 },
+    { tier: 'B',    label: 'MAIN SEQUENCE', id: 'CLASS-III',  x: 600,  y: 615 },
+    { tier: 'DOTA', label: 'HOME STAR',     id: 'CLASS-Ø',    x: 1280, y: 555 },
+  ];
+  return (
+    <>
+      {items.map((it, i) => {
+        const t = TIERS[it.tier];
+        return (
+          <div
+            key={i}
+            className="tier-marker"
+            style={{
+              left: `${(it.x / 1400) * 100}%`,
+              top: `${(it.y / 900) * 100}%`,
+              '--color': t.glow,
+            }}
+          >
+            <div className="name">{it.label}</div>
+            <div className="id">[{it.id}]</div>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+// Background twinkling stars (decorative)
+function TwinkleField({ count = 60 }) {
+  const stars = useMemo(() => {
+    return Array.from({ length: count }, (_, i) => ({
+      left: (i * 17 + (i * i * 7) % 100) % 100,
+      top: (i * 23 + (i * 11) % 100) % 100,
+      dur: 2 + (i % 7) * 0.5,
+      delay: (i * 0.13) % 5,
+      size: (i % 5 === 0) ? 2 : 1,
+    }));
+  }, [count]);
+  return (
+    <>
+      {stars.map((s, i) => (
+        <div
+          key={i}
+          className="twinkle"
+          style={{
+            left: `${s.left}%`,
+            top: `${s.top}%`,
+            width: s.size, height: s.size,
+            '--dur': `${s.dur}s`,
+            '--delay': `${s.delay}s`,
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
+// ====================================================================
+// ATLAS VIEW
+// ====================================================================
+function AtlasView({ games, selected, setSelected, hovered, setHovered, enabledTiers }) {
+  return (
+    <div className="atlas">
+      <div className="stage">
+        {/* layered drifting starfield */}
+        <div className="stars-bg" />
+        <div className="stars-bg layer-2" />
+        <div className="stars-bg layer-3" />
+
+        {/* The big diagonal nebula */}
+        <div className="nebula haze" />
+        <div className="nebula" />
+
+        {/* additional twinkles */}
+        <TwinkleField count={80} />
+
+        {/* scan sweep */}
+        <div className="scan" />
+
+        {/* tier name markers */}
+        <TierMarkers />
+
+        {/* the game stars */}
+        {games.map((g, i) => (
+          <StarBody
+            key={g.name}
+            game={g}
+            idx={i}
+            isSelected={selected?.name === g.name}
+            isHovered={hovered?.name === g.name}
+            onClick={setSelected}
+            onHover={setHovered}
+            hidden={!enabledTiers[g.tier]}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ====================================================================
+// DETAIL PANEL
+// ====================================================================
+function DetailPanel({ game, onClose, idx }) {
+  if (!game) return <div className="panel" />;
+  const t = TIERS[game.tier];
+  const isInf = game.score === 'inf' || game.score === '∞/∞';
+  return (
+    <div className={`panel ${game ? 'open' : ''} scroll-mask`} style={{ '--accent': t.accent }}>
+      <button className="panel-close" onClick={onClose}>×</button>
+
+      <div className="fade-in">
+        <div className="panel-meta">
+          <span className="tier" style={{ color: t.glow }}>{t.classRoman}</span>
+          <span>{catalogId(idx)}</span>
+          <span className="dot">·</span>
+          <span>OBJ-{game.tier}</span>
+        </div>
+
+        <h2 className="panel-name">{game.name}</h2>
+        <div className="panel-class">
+          <b>{t.classification}</b> · {spectralFor(game.tier)}
+        </div>
+
+        <div className="panel-magnitude">
+          <div className="label">APPARENT MAGNITUDE</div>
+          <div className={`value ${isInf ? 'inf' : ''}`}>
+            {isInf ? '∞' : game.score}
+          </div>
+          <div className="scale">{isInf ? 'exceeds catalog limits' : 'of 10.00'}</div>
+        </div>
+
+        <div className="panel-row">
+          <span className="k">DESIGNATION</span>
+          <span className="v">{catalogId(idx)}</span>
+        </div>
+        <div className="panel-row">
+          <span className="k">CLASS</span>
+          <span className="v accent">{t.classification}</span>
+        </div>
+        <div className="panel-row">
+          <span className="k">SPECTRAL</span>
+          <span className="v">{spectralFor(game.tier)}</span>
+        </div>
+        <div className="panel-row">
+          <span className="k">STATUS</span>
+          <span className="v">{game.binary ? 'binary system' : 'isolated body'}</span>
+        </div>
+        {game.apple && (
+          <div className="panel-row">
+            <span className="k">COMPANION</span>
+            <span className="v accent">@apple · co-observation</span>
+          </div>
+        )}
+        <div className="panel-row">
+          <span className="k">FIRST OBSERVED</span>
+          <span className="v">archive · ongoing</span>
+        </div>
+
+        {game.binary && (
+          <div className="binary-badge">COOPERATIVE ORBIT · BEST OBSERVED WITH COMPANY</div>
+        )}
+
+        <div className="panel-note">
+          {game.note ?? t.short}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ====================================================================
+// CATALOG VIEW
+// ====================================================================
+function CatalogView({ games, setSelected }) {
+  const groups = ['S', 'DOTA', 'A', 'AI', 'B', 'C'];
+  const tierGames = useMemo(() => {
+    const out = {};
+    groups.forEach(g => { out[g] = []; });
+    games.forEach(g => out[g.tier]?.push(g));
+    return out;
+  }, [games]);
+
+  return (
+    <div className="catalog scroll-mask">
+      <div className="catalog-inner">
+        {groups.map(gk => {
+          const list = tierGames[gk];
+          if (!list || list.length === 0) return null;
+          const t = TIERS[gk];
+          return (
+            <div key={gk} className="cat-group" style={{ '--accent': t.glow }}>
+              <div className="cat-group-head">
+                <div className="glyph">{t.label}</div>
+                <div>
+                  <div className="name"><b>{t.classification}</b> · {t.classRoman}</div>
+                  <div className="count">[{list.length} observed]</div>
+                </div>
+                <div className="desc">{t.desc}</div>
+              </div>
+              <div className="cat-grid">
+                {list.map((g, i) => {
+                  const gi = games.indexOf(g);
+                  const isInf = g.score === 'inf' || g.score === '∞/∞';
+                  return (
+                    <div
+                      key={g.name}
+                      className="cat-card"
+                      style={{ '--accent': t.glow }}
+                      onClick={() => setSelected(g)}
+                    >
+                      <div className="cat-id">{catalogId(gi)}</div>
+                      <div className="cat-name">{g.name}</div>
+                      <div className="cat-bottom">
+                        <div className={`cat-mag ${isInf ? 'inf' : ''}`}>
+                          {isInf ? '∞' : g.score}
+                        </div>
+                        {g.binary && <div className="cat-binary">◉◉ binary</div>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ====================================================================
+// MISSION LOG VIEW
+// ====================================================================
+function LogView({ games }) {
+  const counts = useMemo(() => {
+    const c = { S: 0, A: 0, AI: 0, B: 0, C: 0, DOTA: 0 };
+    games.forEach(g => c[g.tier]++);
+    return c;
+  }, [games]);
+  const totalConfirmed = games.length;
+  const inf = games.filter(g => g.score === 'inf').length;
+  const binary = games.filter(g => g.binary).length;
+
+  return (
+    <div className="log-view scroll-mask">
+      <div className="log-inner">
+
+        <div className="stat-grid">
+          <div className="stat-cell">
+            <div className="sk">CATALOGUED</div>
+            <div className="sv">{totalConfirmed}</div>
+            <div className="ss">stellar objects</div>
+          </div>
+          <div className="stat-cell">
+            <div className="sk">SINGULARITIES</div>
+            <div className="sv">{inf}</div>
+            <div className="ss">∞ magnitude</div>
+          </div>
+          <div className="stat-cell">
+            <div className="sk">BINARY SYS.</div>
+            <div className="sv">{binary}</div>
+            <div className="ss">cooperative orbits</div>
+          </div>
+          <div className="stat-cell">
+            <div className="sk">DARK MATTER</div>
+            <div className="sv">~∞</div>
+            <div className="ss">unobserved mass</div>
+          </div>
+        </div>
+
+        <div className="log-block dota-block">
+          <div className="lb-tag">★ HOME STAR PROTOCOL ★</div>
+          <h3>DOTA 2 · CALIBRATION REFERENCE</h3>
+          <p>
+            <b>magnitude: ∞/∞.</b> the home star does not appear in the standard catalog because
+            every other object is measured against it. when other systems are surveyed, time is
+            recorded in <b>units of dota matches not played</b>. cumulative dwell time exceeds
+            all other observed bodies combined. it is the gravitational center of the catalog —
+            stable, persistent, and quietly consuming the surrounding mass.
+          </p>
+        </div>
+
+        <div className="log-block">
+          <div className="lb-tag">► OBSERVATION NOTES</div>
+          <h3>BINARY SYSTEMS — COOPERATIVE ORBIT</h3>
+          <p>
+            <b>{binary} stellar objects</b> in this catalog exhibit binary-system behavior — their
+            signal is amplified when a second observer is present in the chamber. the field log
+            entry reads "<i>would replay if u wanna watch</i>", which is shorthand for
+            <b> co-orbit confirmed</b>. these objects are tagged accordingly and recommended
+            for joint observation runs.
+          </p>
+        </div>
+
+        <div className="log-block">
+          <div className="lb-tag">⚠ SECONDARY BODY</div>
+          <h3>IT TAKES TWO · MAGNITUDE CORRECTION</h3>
+          <p>
+            recorded magnitude <b>9.05</b> reflects standalone observation. when paired with
+            companion object <b>@apple</b>, the system enters cooperative orbit and the effective
+            magnitude resolves to <b>10.00</b>. this is the only catalog entry where the recorded
+            value materially understates the observed signal.
+          </p>
+        </div>
+
+        <div className="log-block">
+          <div className="lb-tag">◌ DARK MATTER</div>
+          <h3>UNOBSERVED MASS</h3>
+          <p>
+            field log includes the entry "<i>and so much more trash games i forget about</i>".
+            these objects exist but have <b>fallen below the detection threshold</b> of working
+            memory. estimated mass: substantial. designation: <b>DM-001 through DM-∞</b>. they
+            are not displayed on the atlas because they cannot be located on demand — only
+            inferred from gravitational effects on the rest of the catalog.
+          </p>
+        </div>
+
+        <div className="log-block">
+          <div className="lb-tag">↳ FILED BY</div>
+          <h3>MISSION CONTROL · ATLAS v1</h3>
+          <p>
+            this catalog reflects observations as of the current epoch. magnitude values are
+            <b> subjective</b> but were recorded in good faith. tier boundaries are firm except
+            for the SINGULARITY threshold, which is defined as "<i>I cannot rank these</i>".
+            transmission ends.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ====================================================================
+// HEADER / FOOTER
+// ====================================================================
+function Header({ view, setView, selected }) {
+  const [time, setTime] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const stardate = useMemo(() => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const dayOfYear = Math.floor((d - new Date(y, 0, 0)) / 86400000);
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${y}.${String(dayOfYear).padStart(3, '0')}.${h}${m}`;
+  }, [time]);
+
+  return (
+    <>
+      <div className="hud-top">
+        <div className="hud-left">
+          <div className="title">stellar atlas</div>
+          <div className="sub">personal cosmic catalog · <b>v1.0</b></div>
+        </div>
+        <div className="hud-coords">
+          <div><span className="live">●</span> LIVE · TELESCOPE ONLINE</div>
+          <div>STARDATE <span className="val">{stardate}</span></div>
+          <div>RA <span className="val">17h42m</span> · DEC <span className="val">-29°00'</span></div>
+        </div>
+      </div>
+      <div className="nav">
+        <button className={`nav-btn ${view === 'atlas' ? 'active' : ''}`} onClick={() => setView('atlas')}>
+          atlas
+        </button>
+        <button className={`nav-btn ${view === 'catalog' ? 'active' : ''}`} onClick={() => setView('catalog')}>
+          catalog
+        </button>
+        <button className={`nav-btn ${view === 'log' ? 'active' : ''}`} onClick={() => setView('log')}>
+          mission log
+        </button>
+      </div>
+    </>
+  );
+}
+
+function StatusBar({ selected, total, observing }) {
+  return (
+    <div className="hud-bottom">
+      <div className="grp">
+        <span><span className="pulse-dot"></span>OBSERVATORY · ACTIVE</span>
+      </div>
+      <div className="grp">
+        <span>OBJECTS: <b>{total}</b></span>
+        <span>OBSERVING: <b>{observing}</b></span>
+        <span>FOCUS: <b>{selected ? selected.name.toUpperCase() : '—'}</b></span>
+      </div>
+    </div>
+  );
+}
+
+// Tier filters that toggle visibility
+function TierFilters({ enabled, setEnabled }) {
+  const tiers = [
+    { k: 'S',    label: 'S' },
+    { k: 'A',    label: 'A' },
+    { k: 'AI',   label: 'A·INDIE' },
+    { k: 'B',    label: 'B' },
+    { k: 'C',    label: 'C' },
+    { k: 'DOTA', label: '☉' },
+  ];
+  return (
+    <div className="tier-filters">
+      {tiers.map(t => (
+        <button
+          key={t.k}
+          className={`tf-btn ${enabled[t.k] ? 'on' : ''}`}
+          style={{ '--col': TIERS[t.k].glow }}
+          onClick={() => setEnabled({ ...enabled, [t.k]: !enabled[t.k] })}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ====================================================================
+// APP
+// ====================================================================
+function App() {
+  const [view, setView] = useState('atlas');
+  const [selected, setSelected] = useState(null);
+  const [hovered, setHovered] = useState(null);
+  const [enabled, setEnabled] = useState({
+    S: true, A: true, AI: true, B: true, C: true, DOTA: true,
+  });
+
+  const visibleGames = useMemo(() =>
+    GAMES.filter(g => enabled[g.tier]),
+  [enabled]);
+
+  const selectedIdx = selected ? GAMES.findIndex(g => g.name === selected.name) : -1;
+
+  return (
+    <>
+      <Header view={view} setView={setView} selected={selected} />
+
+      {view === 'atlas' && (
+        <AtlasView
+          games={GAMES}
+          selected={selected}
+          setSelected={setSelected}
+          hovered={hovered}
+          setHovered={setHovered}
+          enabledTiers={enabled}
+        />
+      )}
+      {view === 'catalog' && (
+        <CatalogView games={GAMES} setSelected={setSelected} />
+      )}
+      {view === 'log' && (
+        <LogView games={GAMES} />
+      )}
+
+      {view === 'atlas' && <TierFilters enabled={enabled} setEnabled={setEnabled} />}
+
+      <DetailPanel game={selected} onClose={() => setSelected(null)} idx={selectedIdx} />
+
+      <StatusBar
+        selected={selected}
+        total={GAMES.length}
+        observing={visibleGames.length}
+      />
+    </>
+  );
+}
+
+// Mount
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+// Hide boot splash after fonts settle
+(document.fonts?.ready || Promise.resolve()).then(() => {
+  setTimeout(() => {
+    const b = document.getElementById('boot');
+    if (b) {
+      b.classList.add('hide');
+      setTimeout(() => b.remove(), 900);
+    }
+  }, 600);
+});
+</script>
+</body>
+</html>
